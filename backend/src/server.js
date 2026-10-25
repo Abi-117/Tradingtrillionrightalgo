@@ -123,7 +123,12 @@ app.get("/api/admin/dashboard", requireAdmin, (req, res) => {
   });
 });
 
-
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Trillion Trading Backend is running",
+  });
+});
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
