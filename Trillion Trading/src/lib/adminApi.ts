@@ -1,6 +1,8 @@
+
 const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000" || "https://tradingtrillionrightalgo.onrender.com"
-).replace(/\/$/, "");
+  import.meta.env.VITE_API_URL ||
+  "https://tradingtrillionrightalgo.onrender.com"
+).replace(/\/+$/, "");
 
 export async function adminApi<T = any>(
   path: string,
@@ -10,15 +12,15 @@ export async function adminApi<T = any>(
     ...options,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
       ...options.headers,
+      "Content-Type": "application/json",
     },
   });
 
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || "Request failed");
+    throw new Error(data.message || `Request failed (${response.status})`);
   }
 
   return data as T;
