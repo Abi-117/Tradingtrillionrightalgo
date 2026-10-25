@@ -94,7 +94,7 @@ function RightAlgoReports() {
       formData.append("published", String(published));
 
       const apiUrl = (
-        import.meta.env.VITE_API_URL || "http://localhost:5000"
+        import.meta.env.VITE_API_URL || "http://localhost:5000" || "https://tradingtrillionrightalgo.onrender.com"
       ).replace(/\/$/, "");
 
       const response = await fetch(
