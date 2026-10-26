@@ -20,6 +20,7 @@ router.get("/test", (req, res) => {
   });
 });
 
+
 const createOrderSchema = z.object({
   productId: z.enum([
     "LEVEL_1",
@@ -29,7 +30,8 @@ const createOrderSchema = z.object({
     "SHORT_TERM_BREAKOUT",
   ]),
   couponCode: z.string().trim().max(50).optional(),
-}).strict();
+});
+
 
 function safeEqualHex(a, b) {
   if (
