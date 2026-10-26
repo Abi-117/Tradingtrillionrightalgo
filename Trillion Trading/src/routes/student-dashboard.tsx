@@ -118,9 +118,7 @@ function StudentDashboardPage() {
         <h2 className="text-xl font-semibold">My Payment History</h2>
 
         {orders.length === 0 ? (
-          <p className="mt-4">
-            No purchases found yet.
-          </p>
+          <p className="mt-4">No purchases found yet.</p>
         ) : (
           <div className="mt-4 space-y-4">
             {orders.map((order) => {
@@ -149,10 +147,11 @@ function StudentDashboardPage() {
                 isRightAlgo &&
                 ["REGISTRATION", "RIGHT_SOFTWARE"].includes(product);
 
+              // Trillion WhatsApp includes SOFTWARE now
               const showTrillionWhatsApp =
                 status === "PAID" &&
                 isTrillion &&
-                !["SHORT_TERM_BREAKOUT", "SOFTWARE"].includes(product);
+                product !== "SHORT_TERM_BREAKOUT";
 
               return (
                 <article
@@ -205,7 +204,7 @@ function StudentDashboardPage() {
                     </a>
                   )}
 
-                  {/* Trillion Trading WhatsApp */}
+                  {/* Trillion Trading WhatsApp - including SOFTWARE */}
                   {showTrillionWhatsApp && (
                     <a
                       href="https://chat.whatsapp.com/L4ehj6mCbbWJ4lp4F1si9U"
@@ -213,11 +212,11 @@ function StudentDashboardPage() {
                       rel="noopener noreferrer"
                       className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
                     >
-                      Join Course WhatsApp Group
+                      Join Trillion Trading WhatsApp Group
                     </a>
                   )}
 
-                  {/* Temporary diagnostic: remove after checking */}
+                  {/* Diagnostic message */}
                   {status === "PAID" &&
                     !showScreener &&
                     !showRightAlgoWhatsApp &&
