@@ -10,10 +10,12 @@ import { requireStudent } from "../middleware/requireStudent.js";
 
 const router = Router();
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -42,6 +44,10 @@ const loginSchema = z.object({
 });
 
 function createStudentToken(student) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is missing.");
+  }
+
   return jwt.sign(
     { role: "STUDENT" },
     process.env.JWT_SECRET,
@@ -64,7 +70,7 @@ function studentResponse(student) {
   };
 }
 
-// Register a new student account.
+// Register
 router.post("/register", loginLimiter, async (req, res, next) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
@@ -72,12 +78,13 @@ router.post("/register", loginLimiter, async (req, res, next) => {
     if (!parsed.success) {
       return res.status(400).json({
         success: false,
-        message: "Enter a valid name, email, mobile number and password (minimum 8 characters).",
+        message:
+          "Enter a valid name, email, mobile number and password (minimum 8 characters).",
       });
     }
 
     const name = parsed.data.name;
-    const email = parsed.data.email.toLowerCase();
+    const email = parsed.data.email.toLowerCase().trim();
     const mobile = parsed.data.mobile.trim();
 
     const existing = await Student.findOne({ email }).select("_id");
@@ -85,7 +92,8 @@ router.post("/register", loginLimiter, async (req, res, next) => {
     if (existing) {
       return res.status(409).json({
         success: false,
-        message: "An account with this email already exists. Please log in.",
+        message:
+          "An account with this email already exists. Please log in.",
       });
     }
 
@@ -98,7 +106,9 @@ router.post("/register", loginLimiter, async (req, res, next) => {
       passwordHash,
     });
 
-    res.cookie("student_session", createStudentToken(student), cookieOptions);
+    const token = createStudentToken(student);
+
+    res.cookie("student_session", token, cookieOptions);
 
     return res.status(201).json({
       success: true,
@@ -109,7 +119,8 @@ router.post("/register", loginLimiter, async (req, res, next) => {
     if (error?.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: "An account with this email already exists. Please log in.",
+        message:
+          "An account with this email already exists. Please log in.",
       });
     }
 
@@ -117,7 +128,7 @@ router.post("/register", loginLimiter, async (req, res, next) => {
   }
 });
 
-// Log in an existing student.
+// Login
 router.post("/login", loginLimiter, async (req, res, next) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
@@ -129,14 +140,17 @@ router.post("/login", loginLimiter, async (req, res, next) => {
       });
     }
 
-    const email = parsed.data.email.toLowerCase();
+    const email = parsed.data.email.toLowerCase().trim();
 
     const student = await Student.findOne({ email }).select("+passwordHash");
 
     if (
       !student ||
       !student.isActive ||
-      !(await bcrypt.compare(parsed.data.password, student.passwordHash))
+      !(await bcrypt.compare(
+        parsed.data.password,
+        student.passwordHash
+      ))
     ) {
       return res.status(401).json({
         success: false,
@@ -144,10 +158,12 @@ router.post("/login", loginLimiter, async (req, res, next) => {
       });
     }
 
+    const token = createStudentToken(student);
+
     student.lastLoginAt = new Date();
     await student.save();
 
-    res.cookie("student_session", createStudentToken(student), cookieOptions);
+    res.cookie("student_session", token, cookieOptions);
 
     return res.json({
       success: true,
@@ -159,7 +175,7 @@ router.post("/login", loginLimiter, async (req, res, next) => {
   }
 });
 
-// Get the currently logged-in student.
+// Current logged-in student
 router.get("/me", requireStudent, (req, res) => {
   return res.json({
     success: true,
@@ -167,14 +183,11 @@ router.get("/me", requireStudent, (req, res) => {
   });
 });
 
-// Log out the current student without affecting the admin session.
+// Logout
 router.post("/logout", requireStudent, (req, res) => {
-  res.clearCookie("student_session", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/",
-  });
+  const { maxAge, ...clearOptions } = cookieOptions;
+
+  res.clearCookie("student_session", clearOptions);
 
   return res.json({
     success: true,

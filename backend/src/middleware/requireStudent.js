@@ -2,10 +2,12 @@
 import jwt from "jsonwebtoken";
 import Student from "../models/Student.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
 };
 
@@ -20,13 +22,21 @@ export async function requireStudent(req, res, next) {
       });
     }
 
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing.");
+      return res.status(500).json({
+        success: false,
+        message: "Authentication configuration error.",
+      });
+    }
+
     const payload = jwt.verify(token, process.env.JWT_SECRET, {
       algorithms: ["HS256"],
       issuer: "trillion-trading-api",
       audience: "trillion-trading-student",
     });
 
-    if (!payload.sub) {
+    if (!payload.sub || payload.role !== "STUDENT") {
       return res.status(401).json({
         success: false,
         message: "Invalid student session.",
@@ -45,13 +55,29 @@ export async function requireStudent(req, res, next) {
     }
 
     req.student = student;
-    next();
+    return next();
   } catch (error) {
-    res.clearCookie("student_session", cookieOptions);
+    const { maxAge, ...clearOptions } = {
+      ...cookieOptions,
+      maxAge: undefined,
+    };
 
-    return res.status(401).json({
+    res.clearCookie("student_session", clearOptions);
+
+    if (error.name === "JsonWebTokenError" ||
+        error.name === "TokenExpiredError" ||
+        error.name === "NotBeforeError") {
+      return res.status(401).json({
+        success: false,
+        message: "Student session expired or invalid. Please log in again.",
+      });
+    }
+
+    console.error("Student authentication error:", error.message);
+
+    return res.status(500).json({
       success: false,
-      message: "Student session expired. Please log in again.",
+      message: "Unable to verify student session.",
     });
   }
 }
