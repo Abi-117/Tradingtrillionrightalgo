@@ -7,12 +7,21 @@ import { requireRM } from "../middleware/requireRM.js";
 
 const router = Router();
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
   maxAge: 8 * 60 * 60 * 1000,
+};
+
+const clearCookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
+  path: "/",
 };
 
 router.post("/login", async (req, res) => {
@@ -20,6 +29,7 @@ router.post("/login", async (req, res) => {
     const email = String(req.body?.email || "")
       .trim()
       .toLowerCase();
+
     const password = String(req.body?.password || "");
 
     if (!email || !password || password.length > 200) {
@@ -48,6 +58,8 @@ router.post("/login", async (req, res) => {
     }
 
     if (!process.env.RM_JWT_SECRET) {
+      console.error("RM_JWT_SECRET is missing.");
+
       return res.status(500).json({
         success: false,
         message: "RM authentication is not configured.",
@@ -62,12 +74,13 @@ router.post("/login", async (req, res) => {
         expiresIn: "8h",
         issuer: "rm-brokerage-api",
         audience: "rm-brokerage-portal",
+        algorithm: "HS256",
       }
     );
 
     res.cookie("rm_session", token, cookieOptions);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       rm: {
         id: String(rm._id),
@@ -77,6 +90,7 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     console.error("RM login error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Unable to log in.",
@@ -85,7 +99,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/me", requireRM, (req, res) => {
-  res.json({
+  return res.status(200).json({
     success: true,
     rm: {
       id: String(req.rm._id),
@@ -97,14 +111,12 @@ router.get("/me", requireRM, (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
-  res.clearCookie("rm_session", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-  });
+  res.clearCookie("rm_session", clearCookieOptions);
 
-  res.json({ success: true });
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully.",
+  });
 });
 
 export default router;
