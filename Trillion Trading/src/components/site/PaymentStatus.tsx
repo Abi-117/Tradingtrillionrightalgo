@@ -18,7 +18,7 @@ export function PaymentStatus({
   const q = useQuery({
     queryKey: ["verified-order", business, order],
     queryFn: () => paymentService.getOrder(business, order),
-    enabled: Boolean(order && site.apiBaseUrl),
+enabled: Boolean(order),
     retry: false,
   });
   const verified = q.data?.verified && q.data.business === business && q.data.orderId === order;
