@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 const API_BASE_URL = import.meta.env.DEV
-  ? (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000").replace(/\/+$/, "")
+  ? (import.meta.env.VITE_API_BASE_URL || "https://tradingtrillionrightalgo.onrender.com").replace(/\/+$/, "")
   : "";
 
 
