@@ -1,9 +1,12 @@
 
-const API_BASE = (
-  import.meta.env.VITE_API_URL ||  "https://tradingtrillionrightalgo.onrender.com"
-).replace(/\/$/, "");
+const API_BASE = import.meta.env.DEV
+  ? (
+      import.meta.env.VITE_API_URL ||
+      "http://localhost:5000"
+    ).replace(/\/+$/, "")
+  : "";
 
-export async function rmApi<T>(
+export async function rmApi<T = any>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
@@ -21,7 +24,9 @@ export async function rmApi<T>(
   const result = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(result.message || "Request failed.");
+    throw new Error(
+      result.message || `Request failed (${response.status})`,
+    );
   }
 
   return result as T;
