@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { studentAuthService } from "@/services/studentAuthService";
@@ -20,7 +19,7 @@ type StudentDashboardData = {
     paymentStatus: string;
     receiptNumber: string | null;
     createdAt: string;
-    business: "TRILLION_TRADING" | "RIGHT_ALGO_TRADING";
+    business?: string;
   }[];
 };
 
@@ -46,17 +45,30 @@ function StudentDashboardPage() {
   }
 
   if (dashboard.isLoading) {
-    return <main className="mx-auto max-w-3xl p-6">Loading your dashboard...</main>;
+    return (
+      <main className="mx-auto max-w-3xl p-6">
+        Loading your dashboard...
+      </main>
+    );
   }
 
   if (dashboard.isError || !dashboard.data?.success) {
     return (
       <main className="mx-auto max-w-xl p-6">
         <h1 className="text-2xl font-bold">Student Login Required</h1>
-        <p className="mt-2">Please login to view your Trillion Trading details.</p>
+
+        <p className="mt-2">
+          Please login to view your trading details.
+        </p>
+
         <button
           className="mt-4 rounded-lg bg-primary px-4 py-2 text-primary-foreground"
-          onClick={() => navigate({ to: "/student-login", search: { next: "/student-dashboard" } as never })}
+          onClick={() =>
+            navigate({
+              to: "/student-login",
+              search: { next: "/student-dashboard" } as never,
+            })
+          }
         >
           Go to Login
         </button>
@@ -71,8 +83,11 @@ function StudentDashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">My Student Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">Trillion Trading</p>
+          <p className="mt-2 text-muted-foreground">
+            Trading Account
+          </p>
         </div>
+
         <button
           onClick={handleLogout}
           className="rounded-lg border px-4 py-2"
@@ -81,80 +96,142 @@ function StudentDashboardPage() {
         </button>
       </div>
 
+      {/* Student Profile */}
       <section className="rounded-xl border p-5">
         <h2 className="text-xl font-semibold">My Profile</h2>
+
         <div className="mt-4 space-y-2">
-          <p><strong>Name:</strong> {student.name}</p>
-          <p><strong>Email:</strong> {student.email}</p>
-          <p><strong>Mobile:</strong> {student.mobile}</p>
+          <p>
+            <strong>Name:</strong> {student.name}
+          </p>
+          <p>
+            <strong>Email:</strong> {student.email}
+          </p>
+          <p>
+            <strong>Mobile:</strong> {student.mobile}
+          </p>
         </div>
       </section>
 
+      {/* Payment History */}
       <section className="rounded-xl border p-5">
         <h2 className="text-xl font-semibold">My Payment History</h2>
 
         {orders.length === 0 ? (
-          <p className="mt-4">No Trillion Trading purchases found yet.</p>
+          <p className="mt-4">
+            No purchases found yet.
+          </p>
         ) : (
           <div className="mt-4 space-y-4">
-            {orders.map((order) => (
-              <article key={order.id} className="rounded-lg border p-4">
-                <p><strong>Product:</strong> {order.product}</p>
-                <p><strong>Amount:</strong> ₹{order.amountPaid}</p>
-                <p><strong>Status:</strong> {order.paymentStatus}</p>
-                <p><strong>Receipt:</strong> {order.receiptNumber || "—"}</p>
-                <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(order.createdAt).toLocaleDateString("en-IN")}
-                </p>
+            {orders.map((order) => {
+              const business = String(order.business ?? "")
+                .trim()
+                .toUpperCase();
 
-                
-                
-{order.paymentStatus === "PAID" &&
-  order.business === "TRILLION_TRADING" &&
-  order.product === "SHORT_TERM_BREAKOUT" && (
-    <a
-      href="https://chartink.com/screener/short-term-breakouts"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
-    >
-      Open Short-Term Breakout Screener ↗
-    </a>
-  )}
+              const product = String(order.product ?? "")
+                .trim()
+                .toUpperCase();
 
-{order.paymentStatus === "PAID" &&
-  order.business === "RIGHT_ALGO_TRADING" &&
-  (order.product === "REGISTRATION" ||
-    order.product === "RIGHT_SOFTWARE") && (
-    <a
-      href="https://chat.whatsapp.com/Gow1TUSKW8K37rsHQHMAWa"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
-    >
-      Join Right Algo WhatsApp Group
-    </a>
-  )}
+              const status = String(order.paymentStatus ?? "")
+                .trim()
+                .toUpperCase();
 
-{order.paymentStatus === "PAID" &&
-  order.business === "TRILLION_TRADING" &&
-  order.product !== "SHORT_TERM_BREAKOUT" &&
-  order.product !== "SOFTWARE" && (
-    <a
-      href="https://chat.whatsapp.com/L4ehj6mCbbWJ4lp4F1si9U"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
-    >
-      Join Course WhatsApp Group
-    </a>
-  )}
+              const isTrillion = business === "TRILLION_TRADING";
+              const isRightAlgo = business === "RIGHT_ALGO_TRADING";
 
+              const showScreener =
+                status === "PAID" &&
+                isTrillion &&
+                product === "SHORT_TERM_BREAKOUT";
 
+              const showRightAlgoWhatsApp =
+                status === "PAID" &&
+                isRightAlgo &&
+                ["REGISTRATION", "RIGHT_SOFTWARE"].includes(product);
 
-              </article>
-            ))}
+              const showTrillionWhatsApp =
+                status === "PAID" &&
+                isTrillion &&
+                !["SHORT_TERM_BREAKOUT", "SOFTWARE"].includes(product);
+
+              return (
+                <article
+                  key={order.id}
+                  className="rounded-lg border p-4"
+                >
+                  <p>
+                    <strong>Product:</strong> {order.product}
+                  </p>
+
+                  <p>
+                    <strong>Amount:</strong> ₹{order.amountPaid}
+                  </p>
+
+                  <p>
+                    <strong>Status:</strong> {order.paymentStatus}
+                  </p>
+
+                  <p>
+                    <strong>Receipt:</strong>{" "}
+                    {order.receiptNumber || "—"}
+                  </p>
+
+                  <p>
+                    <strong>Date:</strong>{" "}
+                    {new Date(order.createdAt).toLocaleDateString("en-IN")}
+                  </p>
+
+                  {/* Trillion Trading Screener */}
+                  {showScreener && (
+                    <a
+                      href="https://chartink.com/screener/short-term-breakouts"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+                    >
+                      Open Short-Term Breakout Screener ↗
+                    </a>
+                  )}
+
+                  {/* Right Algo WhatsApp */}
+                  {showRightAlgoWhatsApp && (
+                    <a
+                      href="https://chat.whatsapp.com/Gow1TUSKW8K37rsHQHMAWa"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+                    >
+                      Join Right Algo WhatsApp Group
+                    </a>
+                  )}
+
+                  {/* Trillion Trading WhatsApp */}
+                  {showTrillionWhatsApp && (
+                    <a
+                      href="https://chat.whatsapp.com/L4ehj6mCbbWJ4lp4F1si9U"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+                    >
+                      Join Course WhatsApp Group
+                    </a>
+                  )}
+
+                  {/* Temporary diagnostic: remove after checking */}
+                  {status === "PAID" &&
+                    !showScreener &&
+                    !showRightAlgoWhatsApp &&
+                    !showTrillionWhatsApp && (
+                      <p className="mt-3 rounded-lg border border-amber-500 p-3 text-sm">
+                        Access link could not be matched. Business:{" "}
+                        {order.business || "Missing"}, Product:{" "}
+                        {order.product || "Missing"}, Status:{" "}
+                        {order.paymentStatus || "Missing"}.
+                      </p>
+                    )}
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
