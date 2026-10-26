@@ -81,11 +81,17 @@ router.post(
       const parsed = createOrderSchema.safeParse(req.body);
 
       if (!parsed.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Please check the customer and product details.",
-        });
-      }
+  console.error(
+    "Create order validation failed:",
+    JSON.stringify(parsed.error.flatten(), null, 2),
+  );
+
+  return res.status(400).json({
+    success: false,
+    message: "Please check the customer and product details.",
+    errors: parsed.error.flatten(),
+  });
+}
 
       const { productId, couponCode } = parsed.data;
       const student = req.student;
