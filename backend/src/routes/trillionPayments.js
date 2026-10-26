@@ -380,7 +380,10 @@ return res.json({
 
 /* Get a verified payment belonging to the logged-in Trillion student */
 // GET /screener-access
-router.get("/orders/:orderId", requireStudent, async (req, res, next) => {
+router.get(
+  "/screener-access",
+  requireStudent,
+  async (req, res, next) => {
     try {
       const paidOrder = await Order.findOne({
         business: "TRILLION_TRADING",
