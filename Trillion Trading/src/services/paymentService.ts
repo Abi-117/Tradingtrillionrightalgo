@@ -178,12 +178,12 @@ export const paymentService = {
     ),
 
   
-  getOrder: (business, id) =>
-    api<VerifiedOrder>(
-      business === "TRILLION_TRADING"
-        ? `/api/trillion/payments/orders/${encodeURIComponent(id)}`
-        : `${prefix(business)}/orders/${encodeURIComponent(id)}`
-    ),
+ getOrder: (business: Business, id: string) =>
+  api<VerifiedOrder>(
+    business === "TRILLION_TRADING"
+      ? `/api/trillion/payments/orders/${encodeURIComponent(id)}`
+      : `${prefix(business)}/orders/${encodeURIComponent(id)}`
+  ),
 
 
   receipt: (id: string) =>
