@@ -380,10 +380,7 @@ return res.json({
 
 /* Get a verified payment belonging to the logged-in Trillion student */
 // GET /screener-access
-router.get(
-  "/screener-access",
-  requireStudent,
-  async (req, res, next) => {
+router.get("/orders/:orderId", requireStudent, async (req, res, next) => {
     try {
       const paidOrder = await Order.findOne({
         business: "TRILLION_TRADING",
@@ -406,6 +403,43 @@ router.get(
         product: "SHORT_TERM_BREAKOUT",
         screenerUrl:
           "https://chartink.com/screener/short-term-breakouts",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/* Get a verified order for the logged-in Trillion student */
+router.get(
+  "/payments/orders/:orderId",
+  requireStudent,
+  async (req, res, next) => {
+    try {
+      const order = await Order.findOne({
+        business: "TRILLION_TRADING",
+        razorpayOrderId: req.params.orderId,
+        studentId: req.student._id,
+        paymentStatus: "PAID",
+      }).lean();
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "No verified purchase is available.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        verified: true,
+        business: "TRILLION_TRADING",
+        orderId: order.razorpayOrderId,
+        paymentStatus: order.paymentStatus,
+        product: order.product,
+        amount: order.payableAmount,
+        paymentId: order.razorpayPaymentId,
+        receiptNumber: order.receiptNumber,
       });
     } catch (error) {
       next(error);
