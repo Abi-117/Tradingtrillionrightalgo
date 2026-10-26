@@ -55,7 +55,7 @@ export default function ShortTermBreakout({
 
       // Create the order on your backend.
       const response = await fetch(
-        `${apiBaseUrl}/api/trillion/payments/create-order`,
+       `/api/trillion/payments/create-order`,
         {
           method: "POST",
           credentials: "include",
@@ -100,7 +100,7 @@ if (!response.ok || !order.success) {
         }) => {
           try {
             const verifyResponse = await fetch(
-              `${apiBaseUrl}/api/trillion/payments/verify`,
+              `/api/trillion/payments/verify`,
               {
                 method: "POST",
                 credentials: "include",
@@ -119,7 +119,7 @@ if (!response.ok || !order.success) {
 
             // Only enable access after server-side verification.
             const accessResponse = await fetch(
-              `${apiBaseUrl}/api/trillion/payments/screener-access`,
+              `/api/trillion/payments/screener-access`,
               { credentials: "include" }
             );
 
@@ -165,7 +165,7 @@ if (!response.ok || !order.success) {
     try {
       // Re-check entitlement on the backend every time.
       const response = await fetch(
-        `${apiBaseUrl}/api/trillion/payments/screener-access`,
+        `/api/trillion/payments/screener-access`,
         { credentials: "include" }
       );
 
