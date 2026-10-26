@@ -1,8 +1,5 @@
 
-const API_URL = (
-  import.meta.env.VITE_API_URL ||
-  "https://tradingtrillionrightalgo.onrender.com"
-).replace(/\/+$/, "");
+const API_URL = "";
 
 export async function adminApi<T = any>(
   path: string,
