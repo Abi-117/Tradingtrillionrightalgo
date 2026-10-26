@@ -20,6 +20,7 @@ type StudentDashboardData = {
     paymentStatus: string;
     receiptNumber: string | null;
     createdAt: string;
+    business: "TRILLION_TRADING" | "RIGHT_ALGO_TRADING";
   }[];
 };
 
@@ -108,7 +109,9 @@ function StudentDashboardPage() {
                 </p>
 
                 
+                
 {order.paymentStatus === "PAID" &&
+  order.business === "TRILLION_TRADING" &&
   order.product === "SHORT_TERM_BREAKOUT" && (
     <a
       href="https://chartink.com/screener/short-term-breakouts"
@@ -120,29 +123,34 @@ function StudentDashboardPage() {
     </a>
   )}
 
+{order.paymentStatus === "PAID" &&
+  order.business === "RIGHT_ALGO_TRADING" &&
+  (order.product === "REGISTRATION" ||
+    order.product === "RIGHT_SOFTWARE") && (
+    <a
+      href="https://chat.whatsapp.com/Gow1TUSKW8K37rsHQHMAWa"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+    >
+      Join Right Algo WhatsApp Group
+    </a>
+  )}
 
 {order.paymentStatus === "PAID" &&
+  order.business === "TRILLION_TRADING" &&
   order.product !== "SHORT_TERM_BREAKOUT" &&
-  (order.product === "REGISTRATION" ||
-    order.product === "RIGHT_SOFTWARE" ? (
-      <a
-        href="https://chat.whatsapp.com/Gow1TUSKW8K37rsHQHMAWa"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
-      >
-        Join Right Algo WhatsApp Group
-      </a>
-    ) : order.product !== "SOFTWARE" ? (
-      <a
-        href="https://chat.whatsapp.com/L4ehj6mCbbWJ4lp4F1si9U"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
-      >
-        Join Course WhatsApp Group
-      </a>
-    ) : null)}
+  order.product !== "SOFTWARE" && (
+    <a
+      href="https://chat.whatsapp.com/L4ehj6mCbbWJ4lp4F1si9U"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-3 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+    >
+      Join Course WhatsApp Group
+    </a>
+  )}
+
 
 
               </article>

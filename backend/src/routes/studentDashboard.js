@@ -10,10 +10,14 @@ router.get("/", requireStudent, async (req, res, next) => {
   try {
     const student = req.student;
 
-    const orders = await Order.find({
-      business: "TRILLION_TRADING",
-      studentId: student._id,
-    })
+   
+const orders = await Order.find({
+  business: {
+    $in: ["TRILLION_TRADING", "RIGHT_ALGO_TRADING"],
+  },
+  studentId: student._id,
+})
+
       .select(
         "product originalAmount discountAmount payableAmount currency paymentStatus receiptNumber razorpayOrderId razorpayPaymentId createdAt verifiedAt"
       )
@@ -42,6 +46,7 @@ router.get("/", requireStudent, async (req, res, next) => {
         paymentReference: order.razorpayPaymentId,
         createdAt: order.createdAt,
         verifiedAt: order.verifiedAt,
+        business: order.business,
       })),
     });
   } catch (error) {
