@@ -1,6 +1,6 @@
 
 const API_BASE = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000" || "https://tradingtrillionrightalgo.onrender.com"
+  import.meta.env.VITE_API_URL ||  "https://tradingtrillionrightalgo.onrender.com"
 ).replace(/\/$/, "");
 
 export async function rmApi<T>(

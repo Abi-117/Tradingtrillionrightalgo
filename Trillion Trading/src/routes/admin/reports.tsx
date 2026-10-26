@@ -94,7 +94,7 @@ function AdminReports() {
       // Do not set Content-Type manually for FormData.
       const response = await fetch(
         `${(
-          import.meta.env.VITE_API_URL || "http://localhost:5000" || "https://tradingtrillionrightalgo.onrender.com"
+          import.meta.env.VITE_API_URL || "https://tradingtrillionrightalgo.onrender.com"
         ).replace(/\/$/, "")}/api/admin/reports`,
         {
           method: "POST",
