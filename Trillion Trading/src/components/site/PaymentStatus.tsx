@@ -75,15 +75,15 @@ enabled: Boolean(order),
               
               
 
-{business === "TRILLION_TRADING" &&
-  verified &&
-  q.data?.product !== "SOFTWARE" && (
-    <Button asChild>
-      <External href="https://chat.whatsapp.com/L4ehj6mCbbWJ4lp4F1si9U">
-        Join Course WhatsApp Group
-      </External>
-    </Button>
-  )}
+
+{business === "TRILLION_TRADING" && verified && (
+  <Button asChild>
+    <External href="https://chat.whatsapp.com/L4ehj6mCbbWJ4lp4F1si9U">
+      Join WhatsApp Group
+    </External>
+  </Button>
+)}
+
 
 
               {q.data?.onboarding && <p>{q.data.onboarding}</p>}
