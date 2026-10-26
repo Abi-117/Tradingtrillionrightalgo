@@ -80,10 +80,13 @@ router.post(
     try {
       const parsed = createOrderSchema.safeParse(req.body);
 
-      if (!parsed.success) {
+if (!parsed.success) {
   console.error(
-    "Create order validation failed:",
-    JSON.stringify(parsed.error.flatten(), null, 2),
+    "[CREATE ORDER ERROR]",
+    JSON.stringify({
+      body: req.body,
+      errors: parsed.error.flatten(),
+    }, null, 2)
   );
 
   return res.status(400).json({
