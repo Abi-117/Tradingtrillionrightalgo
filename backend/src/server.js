@@ -44,7 +44,7 @@ if (!process.env.FRONTEND_URL) {
 app.use(helmet());
 
 const allowedOrigins = [
-  "https://tradingtrillionrightalgodeploy.vercel.app",
+  "https://www.trilliontradingrightalgo.com",
 ];
 
 app.use(

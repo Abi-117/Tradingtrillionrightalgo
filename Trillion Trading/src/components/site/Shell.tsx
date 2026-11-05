@@ -6,8 +6,9 @@ import { Logo, External, RiskNote } from "./shared";
 import { site } from "@/config/site";
 const nav = [
   { to: "/" as const, label: "Home" },
-  { to: "/trillion-trading" as const, label: "Trillion Trading" },
   { to: "/right-algo-trading" as const, label: "Right Algo Trading" },
+  { to: "/trillion-trading" as const, label: "Trillion Trading" },
+  
   { to: "/daily-report" as const, label: "Daily Report" },
   { to: "/contact" as const, label: "Contact" },
 ];
@@ -160,6 +161,17 @@ Right Algo Trading
         <RiskNote />
         <div className="footer-legal">
           <span>© {new Date().getUTCFullYear()} Trillion Trading & Right Algo Trading.</span>
+          <p className="text-sm text-gray-400">
+  Developed by{" "}
+  <a
+    href="https://asquaresolutionstech.com"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="font-semibold text-black transition-colors hover:text-indigo-400"
+  >
+    A Square Solutions
+  </a>
+</p>
           <div>
             <Link to="/policies/$policy" params={{ policy: "privacy" }}>
               Privacy Policy
