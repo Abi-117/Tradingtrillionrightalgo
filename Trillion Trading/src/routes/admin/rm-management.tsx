@@ -160,7 +160,7 @@ function RMManagementPage() {
 
           <button
             type="button"
-            onClick={() => void navigate({ to: "/admin/" })}
+            onClick={() => void navigate({ to: "/admin" })}
             className="rounded-lg border border-slate-700 px-4 py-2 hover:bg-slate-800"
           >
             Back to Admin

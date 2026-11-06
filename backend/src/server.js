@@ -28,6 +28,8 @@ import rmPortalRoutes from "./routes/rmPortal.js";
 import studentDashboardRoutes from "./routes/studentDashboard.js";
 import rightAlgoCouponValidationRoutes
   from "./routes/rightAlgoCouponValidation.js";
+import autoPayPaymentRoutes from "./routes/autoPayPayments.js";
+import autoPayWebhookRoutes from "./routes/autoPayWebhook.js";
 
 
 const app = express();
@@ -64,8 +66,11 @@ app.use(
       return callback(new Error(`CORS blocked origin: ${origin}`));
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+allowedHeaders: [
+  "Content-Type",
+  "Authorization",
+  "X-CSRF-Token",
+],    credentials: true,
   })
 );
 
@@ -114,6 +119,8 @@ app.use("/api/admin/right-algo/reports", adminRightAlgoReportsRoutes);
 app.use("/api/admin/right-algo/coupons", adminRightAlgoCouponsRoutes);
 app.use("/api/right-algo/reports", publicRightAlgoReportsRoutes);
 app.use("/api/student/dashboard", studentDashboardRoutes);
+app.use("/api/auto-pay", autoPayPaymentRoutes);
+app.use("/api/auto-pay", autoPayWebhookRoutes);
 app.use(
   "/api/right-algo/coupons",
   rightAlgoCouponValidationRoutes

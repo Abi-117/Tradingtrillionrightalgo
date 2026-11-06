@@ -61,11 +61,9 @@ function Reveal({
           ? false
           : { opacity: 0, y: 28 }
       }
-      whileInView={
-        shouldReduceMotion
-          ? undefined
-          : { opacity: 1, y: 0 }
-      }
+      {...(!shouldReduceMotion
+  ? { whileInView: { opacity: 1, y: 0 } }
+  : {})}
       viewport={{ once: true, amount: 0.12 }}
       transition={{
         duration: 0.7,
@@ -95,11 +93,9 @@ function AnimatedSection({
           ? false
           : { opacity: 0, y: 24 }
       }
-      whileInView={
-        shouldReduceMotion
-          ? undefined
-          : { opacity: 1, y: 0 }
-      }
+      {...(!shouldReduceMotion
+  ? { whileInView: { opacity: 1, y: 0 } }
+  : {})}
       viewport={{ once: true, amount: 0.08 }}
       transition={{ duration: 0.65, ease: easeOut }}
     >
@@ -135,11 +131,9 @@ function Home() {
               ? false
               : { opacity: 0, scale: 1.06 }
           }
-          animate={
-            shouldReduceMotion
-              ? undefined
-              : { opacity: 1, scale: 1 }
-          }
+          {...(!shouldReduceMotion
+  ? { animate: { opacity: 1, scale: 1 } }
+  : {})}
           transition={{ duration: 1.2, ease: easeOut }}
         />
 
@@ -274,11 +268,9 @@ function Home() {
           <Reveal delay={0.18}>
             <motion.div
               className="course-teaser"
-              whileHover={
-                shouldReduceMotion
-                  ? undefined
-                  : { y: -5 }
-              }
+              {...(!shouldReduceMotion
+  ? { whileHover: { y: -5 } }
+  : {})}
               transition={{ duration: 0.25 }}
             >
               <div>
@@ -371,11 +363,9 @@ function Home() {
 
           <Reveal delay={0.15}>
             <motion.div
-              whileHover={
-                shouldReduceMotion
-                  ? undefined
-                  : { y: -4, scale: 1.01 }
-              }
+              {...(!shouldReduceMotion
+  ? { whileHover: { y: -4, scale: 1.01 } }
+  : {})}
               transition={{ duration: 0.3 }}
             >
               <img src={software} alt="BUY and SELL software interface" />

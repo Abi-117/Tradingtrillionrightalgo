@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 const API_BASE_URL = import.meta.env.DEV
-  ? (import.meta.env.VITE_API_BASE_URL || "https://tradingtrillionrightalgo.onrender.com").replace(/\/+$/, "")
+  ? (import.meta.env["VITE_API_BASE_URL"] || "https://tradingtrillionrightalgo.onrender.com").replace(/\/+$/, "")
   : "";
 
 
@@ -21,11 +21,7 @@ type Props = {
 };
 
 declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => {
-      open: () => void;
-    };
-  }
+  
 }
 
 export default function ShortTermBreakout({

@@ -1,9 +1,6 @@
 
-const API_BASE = import.meta.env.DEV
-  ? (
-      import.meta.env.VITE_API_URL ||
-      "https://tradingtrillionrightalgo.onrender.com"
-    ).replace(/\/+$/, "")
+const API_BASE_URL = import.meta.env.DEV
+  ? (import.meta.env["VITE_API_BASE_URL"] || "https://tradingtrillionrightalgo.onrender.com").replace(/\/+$/, "")
   : "";
 
 export async function rmApi<T = any>(
@@ -20,7 +17,7 @@ export async function rmApi<T = any>(
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     credentials: "include",
     headers,

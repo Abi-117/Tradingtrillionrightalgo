@@ -16,9 +16,52 @@ interface PaymentResponse {
   razorpay_signature: string;
 }
 
+export interface AutoPaySubscription {
+  _id: string;
+  business: Business;
+  product: Product;
+  monthlyAmount: number;
+  currency: string;
+  status:
+    | "PENDING_AUTH"
+    | "ACTIVE"
+    | "HALTED"
+    | "CANCELLED"
+    | "COMPLETED"
+    | "FAILED";
+  nextBillingAt: string;
+  lastPaidAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+}
+
+interface AutoPayListResponse {
+  success: boolean;
+  subscriptions: AutoPaySubscription[];
+}
+
+interface AutoPayCancelResponse {
+  success: boolean;
+  message: string;
+  status: string;
+}
+
 interface RazorpayInstance {
   open(): void;
   on(event: string, cb: (data: unknown) => void): void;
+}
+
+interface AutoPayCheckoutResponse {
+  success: boolean;
+  subscriptionId: string;
+  keyId: string;
+  nextBillingAt: string;
+}
+
+interface AutoPayPaymentResponse {
+  razorpay_payment_id: string;
+  razorpay_subscription_id: string;
+  razorpay_signature: string;
 }
 
 interface CouponValidationResponse {
@@ -156,7 +199,8 @@ export const paymentService = {
         order.business !== business ||
         !order.keyId ||
         !order.orderId ||
-        !Number.isSafeInteger(order.amount) ||
+!order.internalOrderId ||
+!Number.isSafeInteger(order.amount) ||
         order.amount <= 0
       ) {
         throw new ApiError(
@@ -281,4 +325,154 @@ export const paymentService = {
       checkout.open();
     });
   },
+  
+  createAutoPaySubscription: (
+    business: Business,
+    product: Product,
+    internalOrderId: string,
+  ) =>
+    post<AutoPayCheckoutResponse>(
+      "/api/auto-pay/create-subscription",
+      {
+        business,
+        product,
+        initialOrderId: internalOrderId,
+        consentAccepted: true,
+      },
+    ),
+
+  async authorizeAutoPay(
+    business: Business,
+    product: Product,
+    internalOrderId: string,
+    customer: Customer,
+  ) {
+    const setup = await paymentService.createAutoPaySubscription(
+      business,
+      product,
+      internalOrderId,
+    );
+
+    if (
+      !setup.success ||
+      !setup.keyId ||
+      !setup.subscriptionId
+    ) {
+      throw new ApiError(
+        "AutoPay subscription could not be created.",
+      );
+    }
+
+    if (!window.Razorpay) {
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src =
+          "https://checkout.razorpay.com/v1/checkout.js";
+
+        script.onload = () => resolve();
+        script.onerror = () =>
+          reject(
+            new ApiError("Razorpay checkout could not load."),
+          );
+
+        document.head.appendChild(script);
+      });
+    }
+
+    const Razorpay = window.Razorpay;
+
+    if (!Razorpay) {
+      throw new ApiError("Razorpay checkout is unavailable.");
+    }
+
+    return new Promise<{
+      success: boolean;
+      status: string;
+    }>((resolve, reject) => {
+      const checkout = new Razorpay({
+        key: setup.keyId,
+        subscription_id: setup.subscriptionId,
+        name:
+          business === "TRILLION_TRADING"
+            ? "Trillion Trading"
+            : "Right Algo Trading",
+        description: `${product} Monthly AutoPay`,
+        prefill: {
+          name: customer.name,
+          email: customer.email,
+          contact: customer.mobile,
+        },
+        handler: async (
+          response: AutoPayPaymentResponse,
+        ) => {
+          try {
+            const result = await post<{
+              success: boolean;
+              status: string;
+              message: string;
+            }>("/api/auto-pay/verify-subscription", {
+              business,
+              subscriptionId:
+                response.razorpay_subscription_id,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+            });
+
+            if (!result.success) {
+              throw new ApiError(
+                result.message ??
+                  "AutoPay authorization could not be verified.",
+              );
+            }
+
+            resolve({
+              success: true,
+              status: result.status,
+            });
+          } catch (error) {
+            reject(error);
+          }
+        },
+        modal: {
+          ondismiss: () =>
+            reject(
+              new ApiError(
+                "AutoPay authorization was cancelled. Your first payment remains separate.",
+              ),
+            ),
+        },
+      });
+
+      checkout.on("payment.failed", () =>
+        reject(
+          new ApiError(
+            "AutoPay authorization failed. Your first payment remains separate.",
+          ),
+        ),
+      );
+
+      checkout.open();
+    });
+  },
+  getAutoPaySubscriptions: (business?: Business) => {
+    const query = business
+      ? `?business=${encodeURIComponent(business)}`
+      : "";
+
+    return api<AutoPayListResponse>(
+      `/api/auto-pay/my-subscriptions${query}`,
+    );
+  },
+
+  cancelAutoPay: (
+    business: Business,
+    subscriptionId: string,
+  ) =>
+    post<AutoPayCancelResponse>(
+      "/api/auto-pay/cancel-subscription",
+      {
+        business,
+        subscriptionId,
+      },
+    ),
 };

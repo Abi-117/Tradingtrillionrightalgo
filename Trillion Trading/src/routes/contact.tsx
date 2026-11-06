@@ -31,7 +31,7 @@ function getWhatsAppNumber(link: string): string {
     if (phone) return phone.replace(/\D/g, "");
 
     const match = url.pathname.match(/\/(\d{8,15})\/?$/);
-    if (match) return match[1];
+    if (match?.[1]) return match[1];
   } catch {
     // Invalid URL: return an empty number below.
   }

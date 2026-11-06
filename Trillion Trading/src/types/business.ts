@@ -57,6 +57,7 @@ export interface VerifiedOrder {
 export interface PaymentOrder {
   keyId: string;
   orderId: string;
+  internalOrderId: string;
   amount: number;
   currency: string;
   business: Business;

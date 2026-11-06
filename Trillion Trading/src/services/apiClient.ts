@@ -13,7 +13,7 @@ export class ApiError extends Error {
 
 const API_BASE_URL = import.meta.env.DEV
   ? (
-      import.meta.env.VITE_API_BASE_URL ||
+      import.meta.env["VITE_API_BASE_URL"] ||
       site.apiBaseUrl ||
       "http://localhost:5000"
     ).replace(/\/+$/, "")
