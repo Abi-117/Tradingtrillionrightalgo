@@ -72,10 +72,10 @@ const autoPaySubscriptionSchema = new mongoose.Schema(
     },
 
     currency: {
-      type: String,
-      default: "INR",
-      immutable: true,
-    },
+  type: String,
+  enum: ["INR"],
+  default: "INR",
+},
 
     razorpayPlanId: {
       type: String,
