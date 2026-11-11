@@ -23,7 +23,7 @@ function AdminReports() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [reportDate, setReportDate] = useState(
-    new Date().toISOString().slice(0, 10),
+    new Date().toISOString().slice(0, 10)
   );
   const [published, setPublished] = useState(false);
   const [image, setImage] = useState<File | null>(null);
@@ -32,28 +32,39 @@ function AdminReports() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // Load reports
   async function loadReports() {
     try {
-      const response = await adminApi<any>("/api/admin/reports");
-      setReports(response.reports ?? response.data?.reports ?? []);
+      const response = await adminApi<any>(
+        "/api/admin/reports"
+      );
+
+      setReports(
+        response.reports ?? response.data?.reports ?? []
+      );
     } catch (err) {
       const text =
-        err instanceof Error ? err.message : "Unable to load reports";
+        err instanceof Error
+          ? err.message
+          : "Unable to load reports";
 
       setError(text);
 
       if (/session|login|unauthorized/i.test(text)) {
-        await navigate({ to: "/admin/login", replace: true });
+        await navigate({
+          to: "/admin/login",
+          replace: true,
+        });
       }
     }
   }
 
   useEffect(() => {
     void loadReports();
-    // Load reports when the page opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Image preview
   useEffect(() => {
     if (!image) {
       setPreview("");
@@ -66,8 +77,12 @@ function AdminReports() {
     return () => URL.revokeObjectURL(objectUrl);
   }, [image]);
 
-  async function handleUpload(event: FormEvent<HTMLFormElement>) {
+  // Upload report
+  async function handleUpload(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
+
     setError("");
     setMessage("");
 
@@ -85,31 +100,23 @@ function AdminReports() {
 
     try {
       const formData = new FormData();
+
       formData.append("image", image);
       formData.append("title", title);
       formData.append("description", description);
       formData.append("reportDate", reportDate);
       formData.append("published", String(published));
 
-      // Do not set Content-Type manually for FormData.
-      const response = await fetch(
-        `${(
-          import.meta.env["VITE_API_URL"]|| "https://tradingtrillionrightalgo.onrender.com"
-        ).replace(/\/$/, "")}/api/admin/reports`,
+      await adminApi<any>(
+        "/api/admin/reports",
         {
           method: "POST",
-          credentials: "include",
           body: formData,
-        },
+        }
       );
 
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(result.message || "Upload failed");
-      }
-
       setMessage("Daily report uploaded successfully.");
+
       setTitle("");
       setDescription("");
       setImage(null);
@@ -117,34 +124,55 @@ function AdminReports() {
 
       await loadReports();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Upload failed"
+      );
     } finally {
       setLoading(false);
     }
   }
 
+  // Publish / Unpublish
   async function togglePublished(report: Report) {
     setError("");
     setMessage("");
 
     try {
-      await adminApi(`/api/admin/reports/${report._id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ published: !report.published }),
-      });
+      await adminApi(
+        `/api/admin/reports/${report._id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            published: !report.published,
+          }),
+        }
+      );
 
       setMessage(
-        report.published ? "Report unpublished." : "Report published.",
+        report.published
+          ? "Report unpublished."
+          : "Report published."
       );
 
       await loadReports();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Update failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Update failed"
+      );
     }
   }
 
+  // Delete report
   async function deleteReport(report: Report) {
-    if (!window.confirm(`Delete "${report.title}" permanently?`)) {
+    if (
+      !window.confirm(
+        `Delete "${report.title}" permanently?`
+      )
+    ) {
       return;
     }
 
@@ -152,14 +180,22 @@ function AdminReports() {
     setMessage("");
 
     try {
-      await adminApi(`/api/admin/reports/${report._id}`, {
-        method: "DELETE",
-      });
+      await adminApi(
+        `/api/admin/reports/${report._id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       setMessage("Report deleted.");
+
       await loadReports();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Delete failed"
+      );
     }
   }
 
@@ -171,14 +207,19 @@ function AdminReports() {
       <header className="border-b border-slate-800 bg-slate-900">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5">
           <div>
-            <h1 className="text-xl font-bold">Daily Reports</h1>
+            <h1 className="text-xl font-bold">
+              Daily Reports
+            </h1>
+
             <p className="mt-1 text-sm text-slate-400">
               Upload and manage market report images
             </p>
           </div>
 
           <button
-            onClick={() => void navigate({ to: "/admin/dashboard" })}
+            onClick={() =>
+              void navigate({ to: "/admin/dashboard" })
+            }
             className="rounded-lg border border-slate-700 px-4 py-2"
           >
             Dashboard
@@ -188,7 +229,10 @@ function AdminReports() {
 
       <div className="mx-auto max-w-6xl space-y-8 px-5 py-8">
         {error && (
-          <p role="alert" className="rounded-lg bg-red-950 p-4 text-red-300">
+          <p
+            role="alert"
+            className="rounded-lg bg-red-950 p-4 text-red-300"
+          >
             {error}
           </p>
         )}
@@ -203,46 +247,58 @@ function AdminReports() {
           onSubmit={handleUpload}
           className="space-y-5 rounded-xl border border-slate-800 bg-slate-900 p-6"
         >
-          <h2 className="text-lg font-semibold">Upload New Report</h2>
+          <h2 className="text-lg font-semibold">
+            Upload New Report
+          </h2>
 
           <label className="block text-sm text-slate-300">
             Report Title
+
             <input
               className={inputClass}
               required
               minLength={2}
               maxLength={150}
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) =>
+                setTitle(event.target.value)
+              }
               placeholder="Example: Nifty Post Market Report"
             />
           </label>
 
           <label className="block text-sm text-slate-300">
             Description
+
             <textarea
               className={inputClass}
               rows={3}
               maxLength={2000}
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={(event) =>
+                setDescription(event.target.value)
+              }
               placeholder="Report summary..."
             />
           </label>
 
           <label className="block text-sm text-slate-300">
             Report Date
+
             <input
               className={inputClass}
               type="date"
               required
               value={reportDate}
-              onChange={(event) => setReportDate(event.target.value)}
+              onChange={(event) =>
+                setReportDate(event.target.value)
+              }
             />
           </label>
 
           <label className="block text-sm text-slate-300">
             Report Image (JPG, PNG, WebP — max 5 MB)
+
             <input
               className="mt-2 block w-full text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:font-semibold file:text-white"
               type="file"
@@ -256,7 +312,10 @@ function AdminReports() {
 
           {preview && (
             <div>
-              <p className="mb-2 text-sm text-slate-400">Image Preview</p>
+              <p className="mb-2 text-sm text-slate-400">
+                Image Preview
+              </p>
+
               <img
                 src={preview}
                 alt="Selected report preview"
@@ -269,7 +328,9 @@ function AdminReports() {
             <input
               type="checkbox"
               checked={published}
-              onChange={(event) => setPublished(event.target.checked)}
+              onChange={(event) =>
+                setPublished(event.target.checked)
+              }
             />
             Publish immediately
           </label>
@@ -284,10 +345,14 @@ function AdminReports() {
         </form>
 
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold">Uploaded Reports</h2>
+          <h2 className="text-lg font-semibold">
+            Uploaded Reports
+          </h2>
 
           {reports.length === 0 ? (
-            <p className="text-slate-400">No reports uploaded yet.</p>
+            <p className="text-slate-400">
+              No reports uploaded yet.
+            </p>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {reports.map((report) => (
@@ -302,26 +367,44 @@ function AdminReports() {
                   />
 
                   <div className="space-y-3 p-4">
-                    <h3 className="font-semibold">{report.title}</h3>
+                    <h3 className="font-semibold">
+                      {report.title}
+                    </h3>
 
                     <p className="text-sm text-slate-400">
-                      {new Date(report.reportDate).toLocaleDateString("en-IN")}
+                      {new Date(
+                        report.reportDate
+                      ).toLocaleDateString("en-IN")}
                     </p>
 
+                    {report.description && (
+                      <p className="text-sm text-slate-400">
+                        {report.description}
+                      </p>
+                    )}
+
                     <p className="text-sm">
-                      {report.published ? "Published" : "Draft"}
+                      {report.published
+                        ? "Published"
+                        : "Draft"}
                     </p>
 
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => void togglePublished(report)}
+                        onClick={() =>
+                          void togglePublished(report)
+                        }
                         className="rounded-lg border border-slate-700 px-3 py-2 text-sm hover:bg-slate-800"
                       >
-                        {report.published ? "Unpublish" : "Publish"}
+                        {report.published
+                          ? "Unpublish"
+                          : "Publish"}
                       </button>
 
                       <button
-                        onClick={() => void deleteReport(report)}
+                        onClick={() =>
+                          void deleteReport(report)
+                        }
                         className="rounded-lg border border-red-900 px-3 py-2 text-sm text-red-300 hover:bg-red-950"
                       >
                         Delete
@@ -337,3 +420,5 @@ function AdminReports() {
     </main>
   );
 }
+
+export default AdminReports;
