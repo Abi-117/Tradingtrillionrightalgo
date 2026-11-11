@@ -40,11 +40,11 @@ export async function requireAdmin(req, res, next) {
     next();
   } catch {
     res.clearCookie("admin_session", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-    });
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  path: "/",
+});
 
     return res.status(401).json({
       success: false,

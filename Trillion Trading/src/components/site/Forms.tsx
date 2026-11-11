@@ -359,12 +359,11 @@ const prices: Record<Product, number> = {
             }}
           >
             <input
-              type="checkbox"
-              checked={autoPayConsent}
-              onChange={(e) =>
-                setAutoPayConsent(e.target.checked)
-              }
-              disabled={busy}
+  type="checkbox"
+  required
+  checked={autoPayConsent}
+  onChange={(e) => setAutoPayConsent(e.target.checked)}
+  disabled={busy}
               style={{
                 width: "18px",
                 height: "18px",

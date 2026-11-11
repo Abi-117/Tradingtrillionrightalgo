@@ -141,10 +141,10 @@ async function submit(e: FormEvent<HTMLFormElement>) {
             </p>
             <div className="price-chips">
               <div className="price-chip">
-                <span>Software</span>
-                <strong>{money(site.rightSoftware.price)}</strong>
-                <small>one-time</small>
-              </div>
+  <span>Software</span>
+  <strong>{money(site.rightSoftware.price)}</strong>
+  <small>Per Month</small>
+</div>
               <div className="price-chip">
                 <span>Registration</span>
                 <strong>{money(site.right.registrationFee)}</strong>
