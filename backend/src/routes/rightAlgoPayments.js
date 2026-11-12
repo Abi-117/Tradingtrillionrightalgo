@@ -9,6 +9,7 @@ import Order from "../models/Order.js";
 import RightAlgoRegistration from "../models/RightAlgoRegistration.js";
 import { getRightAlgoRazorpay } from "../services/rightAlgoRazorpay.js";
 import { requireStudent } from "../middleware/requireStudent.js";
+import Coupon from "../models/Coupon.js";
 
 const router = Router();
 
@@ -143,6 +144,8 @@ router.post("/register", requireStudent, async (req, res) => {
 });
 
 // Create a payment order for the authenticated student.
+
+// Create a payment order for the authenticated student.
 router.post("/payments/create-order", requireStudent, async (req, res) => {
   let savedOrder;
 
@@ -157,13 +160,23 @@ router.post("/payments/create-order", requireStudent, async (req, res) => {
     }
 
     const student = req.student;
-    const { productId, registrationId } = parsed.data;
+    const { productId, registrationId, couponCode } = parsed.data;
 
     let originalAmount;
     let registration = null;
     let productName;
+    let appliedCoupon = null;
+    let discountAmount = 0;
 
+    // REGISTRATION PAYMENT
     if (productId === REGISTRATION_PRODUCT) {
+      if (couponCode) {
+        return res.status(400).json({
+          success: false,
+          message: "Coupons are available for Right Algo software only.",
+        });
+      }
+
       if (!Number.isSafeInteger(REGISTRATION_FEE) || REGISTRATION_FEE < 1) {
         return res.status(500).json({
           success: false,
@@ -200,6 +213,7 @@ router.post("/payments/create-order", requireStudent, async (req, res) => {
       originalAmount = REGISTRATION_FEE;
       productName = "Right Algo Trading Registration";
     } else {
+      // SOFTWARE PRODUCT
       const software = await Software.findOne({
         business: BUSINESS,
         productId: SOFTWARE_PRODUCT,
@@ -217,8 +231,6 @@ router.post("/payments/create-order", requireStudent, async (req, res) => {
         });
       }
 
-      // Software purchase requires a paid registration belonging
-      // to this same student account.
       const paidRegistration = await RightAlgoRegistration.findOne({
         studentId: student._id,
         registrationPaymentStatus: "PAID",
@@ -235,11 +247,59 @@ router.post("/payments/create-order", requireStudent, async (req, res) => {
       originalAmount = software.price;
       productName = software.name || "Right Algo Trading Software";
       registration = paidRegistration;
+
+      // SERVER-SIDE COUPON VALIDATION
+      if (couponCode) {
+        const normalizedCode = couponCode.trim().toUpperCase();
+        const now = new Date();
+
+        const coupon = await Coupon.findOne({
+          code: normalizedCode,
+          business: BUSINESS,
+          active: true,
+          products: SOFTWARE_PRODUCT,
+          startsAt: { $lte: now },
+          $or: [
+            { expiresAt: null },
+            { expiresAt: { $gt: now } },
+          ],
+        });
+
+        if (
+          !coupon ||
+          (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses)
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid, expired, or unavailable coupon.",
+          });
+        }
+
+        if (
+          !Number.isSafeInteger(coupon.discountAmount) ||
+          coupon.discountAmount <= 0 ||
+          coupon.discountAmount >= originalAmount
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Coupon cannot be applied to this product.",
+          });
+        }
+
+        discountAmount = coupon.discountAmount;
+        appliedCoupon = coupon.code;
+      }
     }
 
-    const amountPaise = originalAmount * 100;
+    // FINAL DISCOUNTED AMOUNT
+    const payableAmount = originalAmount - discountAmount;
+    const amountPaise = payableAmount * 100;
 
-    if (!Number.isSafeInteger(amountPaise)) {
+    if (
+      !Number.isSafeInteger(payableAmount) ||
+      payableAmount < 1 ||
+      !Number.isSafeInteger(amountPaise)
+    ) {
       return res.status(400).json({
         success: false,
         message: "Invalid payment amount.",
@@ -256,16 +316,14 @@ router.post("/payments/create-order", requireStudent, async (req, res) => {
         email: student.email,
         mobile: student.mobile,
       },
-      couponCode: null,
+      couponCode: appliedCoupon,
       originalAmount,
-      discountAmount: 0,
-      payableAmount: originalAmount,
+      discountAmount,
+      payableAmount,
       amountPaise,
       currency: "INR",
       paymentStatus: "PENDING",
     });
-
-    const internalOrderId = String(savedOrder._id);
 
     const razorpayOrder = await getRightAlgoRazorpay().orders.create({
       amount: amountPaise,
@@ -274,8 +332,10 @@ router.post("/payments/create-order", requireStudent, async (req, res) => {
       notes: {
         business: BUSINESS,
         productId,
-        internalOrderId,
+        internalOrderId: String(savedOrder._id),
         registrationId: registration ? String(registration._id) : "",
+        couponCode: appliedCoupon || "",
+        discountAmount: String(discountAmount),
       },
     });
 
@@ -287,9 +347,9 @@ router.post("/payments/create-order", requireStudent, async (req, res) => {
       await registration.save();
     }
 
-    return res
-      .status(201)
-      .json(safeOrderResponse(savedOrder, razorpayOrder, productName));
+    return res.status(201).json(
+      safeOrderResponse(savedOrder, razorpayOrder, productName)
+    );
   } catch (error) {
     console.error("Right Algo create-order error:", error);
 
@@ -310,6 +370,7 @@ router.post("/payments/create-order", requireStudent, async (req, res) => {
     });
   }
 });
+
 
 // Verify payment only for the student who owns the order.
 router.post("/payments/verify", requireStudent, async (req, res) => {
